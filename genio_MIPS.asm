@@ -24,8 +24,8 @@ desenha_jogo:
 	li $a3, 0x135C0A		#verde escuro
 	li $a2, 32				#tamanho da linha/coluna
 	li $a0, 0				#anda na vertical
-	li $a1, 11				#anda na horizontal
-	li $a2, 10				#quanidade de pixel
+	li $a1, 10				#anda na horizontal
+	li $a2, 12				#quanidade de pixel
 	retangulo_verdeescuro:
 	beq $a0, 7, amarelo_escuro
 		addi $a0, $a0, 1
@@ -50,8 +50,8 @@ desenha_jogo:
 	li $a3, 0x0C0273		#verde escuro
 	li $a2, 32				#tamanho da linha/coluna
 	li $a0, 23				#anda na vertical 		y
-	li $a1, 11				#anda na horizontal		X
-	li $a2, 10				#quanidade de pixel
+	li $a1, 10				#anda na horizontal		X
+	li $a2, 12				#quanidade de pixel
 	retangulo_azulescuro:
 	beq $a0, 30, vermelho_escuro
 		addi $a0, $a0, 1
