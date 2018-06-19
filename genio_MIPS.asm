@@ -1,11 +1,21 @@
 .data
 
-array: .word 0, 1, 2, 3
+vetor: .word 0:1024 #inicializados com zero
 
 .text
 main:
-
 	jal desenha_jogo
+	#mostra opcao de ativacao
+	#0 - 5n;  1 - 15n;  3 - 45;
+	#pega do teclado 0, 1, 2
+	#move s0
+	la $s1, vetor		#vetor random
+	li $s0,5		#quantidade de numero no vetor (ativacao)
+	jal gera
+	
+	#vetor ta em t0
+	lw $
+	jal acende
 	
 	li $v0, 10
 	syscall
@@ -30,6 +40,7 @@ desenha_jogo:
 	beq $a0, 7, amarelo_escuro
 		addi $a0, $a0, 1
 		jal linha
+		
 	j retangulo_verdeescuro
 	
 	#QUADRADO AMARELO ESQ
@@ -74,7 +85,48 @@ desenha_jogo:
 	sai:
 	jr $ra
 
+gera:
 	
+	random:
+	beqz $s0, sai_gera		#t6 = 0 qtdd
+   	li $a1, 3       	 	#ate 3 pra gerar valor
+	li $v0, 42			#random
+	syscall
+   	#faz vetor
+   	sw $a0, 0($s1)      #vetor
+   	addi $s1, $s1, 4    #anda pelo vetor
+   	addi $s0, $s0, -1    #qtd -1
+ 	j random
+		move $t0, $a0
+		
+	sai_gera:
+		jr $ra
+	
+	
+acende:
+	lw $t0,0($s1)		# primeiro elemento do vetor 
+	
+	verde_0:
+		bne $t0, 0, azul_1
+		#acende verde claro
+		
+	azul_1:
+		bne $t0, 1, amarelo_2
+		#acende azul claro 
+		
+	amarelo_2:
+		bne $t0, 2, vermelho_3
+		#acende amarelo claro 
+	vermelho_3:
+		bne $t0, 2, ????????
+		#acende vermelho claro 		
+	
+			
+	
+	
+	
+			
+					
 #desenha
 linha:  
 	li   $t0, 0x10010000	#t3 = endereco base
@@ -110,9 +162,10 @@ escreve_c:
 	jr $ra
 	
 #esperando tempo para desligar DELAY
-	li $v0, 32 			#sleep
-	li $a0, 1000 		#1000ms
-	syscall 			#do the sleep
+	#sleep:
+	#	li $v0, 32 			#sleep
+	#	li $a0, 1000 			#1000ms
+	#	syscall 			#do the sleep
 
 #	#setando o pixel -apagando o pixel 
 #	setpixel:
