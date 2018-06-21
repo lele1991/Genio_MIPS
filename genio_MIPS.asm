@@ -11,10 +11,7 @@ main:
 	#move s0
 	la $s1, vetor		#vetor random
 	li $s0,5		#quantidade de numero no vetor (ativacao)
-	jal gera
-	
-	#vetor ta em t0
-	lw $
+	jal gera	
 	jal acende
 	
 	li $v0, 10
@@ -30,8 +27,10 @@ main:
 
 	
 desenha_jogo:	
+	addi $sp, $sp, -24
+	sw $ra, 0($sp)			#salva retorno do desenho
 	#QUADRADO VERDE - CIMA
-	li $a3, 0x135C0A		#verde escuro
+	li $a3, 0x135C0A			#verde escuro
 	li $a2, 32				#tamanho da linha/coluna
 	li $a0, 0				#anda na vertical
 	li $a1, 10				#anda na horizontal
@@ -77,16 +76,96 @@ desenha_jogo:
 	li $a1, 23				#anda na horizontal
 	li $a2, 8				#quanidade de pixel
 	retangulo_vermelhoescuro:
-	beq $a0, 20, sai
+	beq $a0, 20, sai_vermelho_escuro
 		addi $a0, $a0, 1
 		jal linha
 	j retangulo_vermelhoescuro
 	
-	sai:
+	sai_vermelho_escuro:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
 	jr $ra
 
-gera:
+#PINTANDO CLARO
+
+verde_claro:
+	addi $sp, $sp, -24
+	sw   $ra, 0($sp)
+	#QUADRADO VERDE CLARO - CIMA
+	li $a2, 32				#tamanho da linha/coluna
+	li $a0, 0				#anda na vertical
+	li $a1, 10				#anda na horizontal
+	li $a2, 12				#quanidade de pixel
+	retangulo_verdeclaro:
+	beq $a0, 7, sai_verde_claro
+		addi $a0, $a0, 1
+		jal linha
+	j retangulo_verdeclaro
 	
+	sai_verde_claro:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra
+
+amarelo_claro:
+	addi $sp, $sp, -24
+	sw   $ra, 0($sp)
+	#QUADRADO AMARELO ESQ
+	li $a2, 32				#tamanho da linha/coluna
+	li $a0, 10				#anda na vertical		y
+	li $a1, 1				#anda na horizontal		x
+	li $a2, 8				#quanidade de pixel
+	retangulo_amareloclaro:
+	beq $a0, 20, sai_amarelo_claro
+		addi $a0, $a0, 1
+		jal linha
+	j retangulo_amareloclaro
+	
+	sai_amarelo_claro:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra
+	
+azul_claro:
+	addi $sp, $sp, -24
+	sw   $ra, 0($sp)
+	#QUADRADO AZUL - BAIXO
+	li $a2, 32				#tamanho da linha/coluna
+	li $a0, 23				#anda na vertical 		y
+	li $a1, 10				#anda na horizontal		X
+	li $a2, 12				#quanidade de pixel
+	retangulo_azulclaro:
+	beq $a0, 30, sai_azul_claro
+		addi $a0, $a0, 1
+		jal linha
+	j retangulo_azulclaro
+	
+	sai_azul_claro:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra
+
+vermelho_claro:
+	addi $sp, $sp, -24
+	sw   $ra, 0($sp)
+	#QUADRADO VERMELHO DIR
+	li $a2, 32				#tamanho da linha/coluna
+	li $a0, 10				#anda na vertical
+	li $a1, 23				#anda na horizontal
+	li $a2, 8				#quanidade de pixel
+	retangulo_vermelhoclaro:
+	beq $a0, 20, sai_vermelho_claro
+		addi $a0, $a0, 1
+		jal linha
+	j retangulo_vermelhoclaro
+	
+	sai_vermelho_claro:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra	
+gera:
+	addi $sp, $sp, -24
+	sw $ra, 0($sp)
 	random:
 	beqz $s0, sai_gera		#t6 = 0 qtdd
    	li $a1, 3       	 	#ate 3 pra gerar valor
@@ -100,33 +179,66 @@ gera:
 		move $t0, $a0
 		
 	sai_gera:
-		jr $ra
+	lw $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra
 	
 	
 acende:
-	lw $t0,0($s1)		# primeiro elemento do vetor 
+	addi $sp, $sp, -24
+	sw   $ra, 0($sp)
+	lw $t0, 0($s1)		# primeiro elemento do vetor 
+	li $t1, 0		#j
+	move $a1, $a0		#a1 = a0 = i
+	for_acende:				
+		bgt $t1, $a1, sai_acende	#for(j=0;j<=i;j++) a1 é igual a i ( rebebido da funcao toca)
 	
-	verde_0:
-		bne $t0, 0, azul_1
-		#acende verde claro
-		
-	azul_1:
-		bne $t0, 1, amarelo_2
-		#acende azul claro 
-		
-	amarelo_2:
-		bne $t0, 2, vermelho_3
-		#acende amarelo claro 
-	vermelho_3:
-		bne $t0, 2, ????????
-		#acende vermelho claro 		
-	
+		verde_0:
+			bne $t0, 0, azul_1	#acende verde claro
+			li $a3, 0x00FF00	#verde claro
+			jal verde_claro
+			jal sleep
+			li $a3, 0x135C0A	#verde escuro
+			jal verde_claro				
 			
-	
-	
-	
+		azul_1:
+			bne $t0, 1, amarelo_2	#acende azul claro 
+			li $a3, 0x00BFFF	#azul claro
+			jal azul_claro
+			jal sleep
+			li $a3, 0x0C0273	#azul escuro
+			jal azul_claro	
+						
+		amarelo_2:
+			bne $t0, 2, vermelho_3	#acende amarelo claro 
+			li $a3, 0xFFFF00	#amarelo claro
+			jal amarelo_claro
+			jal sleep
+			li $a3, 0x80730D	#amrelo escuro
+			jal amarelo_claro	
+		vermelho_3:
+			bne $t0, 2, for_acende	#acende vermelho claro 		
+			li $a3, 0xFF4500	#vermelho claro
+			jal vermelho_claro
+			jal sleep
+			li $a3, 0x800303	#vermelho escuro
+			jal vermelho_claro
 			
-					
+		 addi $t1, $t1, 1 		#j++
+		 add $s1, $s1, 4		#anda pelo vetor
+		 j for_acende
+	 
+	sai_acende:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra		
+
+sleep:	
+	#sleep:
+	li $v0, 32 			#sleep
+	li $a0, 1000 			#1000ms
+	syscall
+	jr $ra 		
 #desenha
 linha:  
 	li   $t0, 0x10010000	#t3 = endereco base
