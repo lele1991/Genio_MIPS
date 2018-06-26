@@ -9,23 +9,109 @@ main:
 	#0 - 5n;  1 - 15n;  3 - 45;
 	#pega do teclado 0, 1, 2
 	#move s0
-	la $s1, vetor		#vetor random
-	li $s0,5		#quantidade de numero no vetor (ativacao)
-	jal gera	
-	jal acende
+	la $s1, vetor	#vetor random
+	#fazer menu com entrada do usuario para a quantidade de numeros no vetor
+	li $s2,5		#quantidade de numero no vetor (ativacao) -  dado pelo usuario
+	
+	
+	jal gera			#gera vetor random
+	move $a0, $s1	#parametro pra sequencia a0 = vetor
+	move $a1, $s2		# '' 	a1 = num ativacao
+	jal sequencia
 	
 	li $v0, 10
 	syscall
-#512/16 -  pixel maior - 32 espacos 
-	#sorteia array(random)
-	
-	#bota na pilha
-	
+	#512/16 -  pixel maior - 32 espacos 
 	#entrada do teclado
-	
 	#compara entrada - roda o jogo
+########################################################################
+gera:
+	addi $sp, $sp, -24
+	sw $ra, 0($sp)
 
+	move $t0, $a0
+	random:
+	beqz $t0, sai_gera		#t0 = 0 qtdd
+   	li $a1, 3       	 	#ate 3 pra gerar valor
+	li $v0, 42				#random
+	syscall
+   	#faz vetor
+   	sw $a0, 0($s1)      	#vetor
+   	addi $s1, $s1, 4    	#anda pelo vetor
+   	addi $t0, $t0, -1    	#qtd -1
+ 	j random
+		move $t0, $a0
+		
+	sai_gera:
+	lw $ra, 0($sp)
+	addi $sp, $sp, 24
+	jr $ra
+########################################################################	
+sequencia:
+	addi $sp, $sp, -24
+	sw  $s0, 0($sp)				#vetor
+	sw	$a1, 4($sp)				#n de ativacao
+	sw  $ra, 8($sp)
+	move $s0, $a0
 	
+	move $t2, $a1				#numero de ativacao recebido pelo usuario
+	li 	$t1, 0					#i = 0
+	for_sequencia:
+	bge $t1, $t2, sai_sequencia	#for(i=0; i<n; i++)
+		lw $a0, 0($s0)
+		jal acende
+		add $s0, $s0, 4			#anda pelo vetor
+		addi $t1, $t1, 1		#i++
+	j for_sequencia
+	
+	sai_sequencia:
+	lw  $ra, 8($sp)
+	lw 	$a1, 4 ($sp)
+	lw 	$s0, 0 ($sp)
+	addi $sp, $sp, 24
+########################################################################	
+acende:
+	addi $sp, $sp, -24
+	sw   $ra, 8($sp)
+	sw   $a0, 0($sp)    	#vetor
+	
+	verde_0:
+		bne $a0, 0, azul_1	#acende verde claro
+		li $a3, 0x00FF00	#verde claro
+		jal verde_claro
+		jal sleep
+		li $a3, 0x135C0A	#verde escuro
+		jal verde_claro				
+			
+	azul_1:
+		bne $a0, 1, amarelo_2	#acende azul claro 
+		li $a3, 0x00BFFF	#azul claro
+		jal azul_claro
+		jal sleep
+		li $a3, 0x0C0273	#azul escuro
+		jal azul_claro	
+						
+	amarelo_2:
+		bne $a0, 2, vermelho_3	#acende amarelo claro 
+		li $a3, 0xFFFF00	#amarelo claro
+		jal amarelo_claro
+		jal sleep
+		li $a3, 0x80730D	#amrelo escuro
+		jal amarelo_claro	
+	vermelho_3:
+		bne $a0, 2, sai_acende	#acende vermelho claro 		
+		li $a3, 0xFF4500	#vermelho claro
+		jal vermelho_claro
+		jal sleep
+		li $a3, 0x800303	#vermelho escuro
+		jal vermelho_claro
+		
+	sai_acende:
+	lw   $a0, 0($sp)
+	lw   $ra, 8($sp)
+	addi $sp, $sp, 24
+	jr $ra	
+########################################################################
 desenha_jogo:	
 	addi $sp, $sp, -24
 	sw $ra, 0($sp)			#salva retorno do desenho
@@ -85,12 +171,12 @@ desenha_jogo:
 	lw   $ra, 0($sp)
 	addi $sp, $sp, 24
 	jr $ra
-
+########################################################################
 #PINTANDO CLARO
-
 verde_claro:
 	addi $sp, $sp, -24
 	sw   $ra, 0($sp)
+	
 	#QUADRADO VERDE CLARO - CIMA
 	li $a2, 32				#tamanho da linha/coluna
 	li $a0, 0				#anda na vertical
@@ -103,6 +189,7 @@ verde_claro:
 	j retangulo_verdeclaro
 	
 	sai_verde_claro:
+	
 	lw   $ra, 0($sp)
 	addi $sp, $sp, 24
 	jr $ra
@@ -162,84 +249,17 @@ vermelho_claro:
 	sai_vermelho_claro:
 	lw   $ra, 0($sp)
 	addi $sp, $sp, 24
-	jr $ra	
-gera:
-	addi $sp, $sp, -24
-	sw $ra, 0($sp)
-	random:
-	beqz $s0, sai_gera		#t6 = 0 qtdd
-   	li $a1, 3       	 	#ate 3 pra gerar valor
-	li $v0, 42			#random
-	syscall
-   	#faz vetor
-   	sw $a0, 0($s1)      #vetor
-   	addi $s1, $s1, 4    #anda pelo vetor
-   	addi $s0, $s0, -1    #qtd -1
- 	j random
-		move $t0, $a0
-		
-	sai_gera:
-	lw $ra, 0($sp)
-	addi $sp, $sp, 24
 	jr $ra
 	
-	
-acende:
-	addi $sp, $sp, -24
-	sw   $ra, 0($sp)
-	lw $t0, 0($s1)		# primeiro elemento do vetor 
-	li $t1, 0		#j
-	move $a1, $a0		#a1 = a0 = i
-	for_acende:				
-		bgt $t1, $a1, sai_acende	#for(j=0;j<=i;j++) a1 é igual a i ( rebebido da funcao toca)
-	
-		verde_0:
-			bne $t0, 0, azul_1	#acende verde claro
-			li $a3, 0x00FF00	#verde claro
-			jal verde_claro
-			jal sleep
-			li $a3, 0x135C0A	#verde escuro
-			jal verde_claro				
-			
-		azul_1:
-			bne $t0, 1, amarelo_2	#acende azul claro 
-			li $a3, 0x00BFFF	#azul claro
-			jal azul_claro
-			jal sleep
-			li $a3, 0x0C0273	#azul escuro
-			jal azul_claro	
-						
-		amarelo_2:
-			bne $t0, 2, vermelho_3	#acende amarelo claro 
-			li $a3, 0xFFFF00	#amarelo claro
-			jal amarelo_claro
-			jal sleep
-			li $a3, 0x80730D	#amrelo escuro
-			jal amarelo_claro	
-		vermelho_3:
-			bne $t0, 2, for_acende	#acende vermelho claro 		
-			li $a3, 0xFF4500	#vermelho claro
-			jal vermelho_claro
-			jal sleep
-			li $a3, 0x800303	#vermelho escuro
-			jal vermelho_claro
-			
-		 addi $t1, $t1, 1 		#j++
-		 add $s1, $s1, 4		#anda pelo vetor
-		 j for_acende
-	 
-	sai_acende:
-	lw   $ra, 0($sp)
-	addi $sp, $sp, 24
-	jr $ra		
-
+########################################################################
 sleep:	
 	#sleep:
 	li $v0, 32 			#sleep
-	li $a0, 1000 			#1000ms
+	li $a0, 1000 		#1000ms
 	syscall
-	jr $ra 		
-#desenha
+	jr $ra 
+			
+#########################################################################desenha
 linha:  
 	li   $t0, 0x10010000	#t3 = endereco base
 	sll  $t1, $a0, 5		#y = y * 512/16  -  vertical -2^5=16 -> 16+16 -> 16x16 bloco de 32
@@ -255,7 +275,6 @@ escreve_l:
 	j escreve_l
 	return_l:
 	jr $ra
-	
 coluna:
 	li   $t0, 0x10010000	#t3 = endereco base
 	sll  $t1, $a0, 5		#y = y * 512/16  -  vertical -2^5=16 -> 16+16 -> 16x16 bloco de 32
@@ -272,7 +291,10 @@ escreve_c:
 	j escreve_c
 	return_c:
 	jr $ra
-	
+########################################################################
+
+
+
 #esperando tempo para desligar DELAY
 	#sleep:
 	#	li $v0, 32 			#sleep
