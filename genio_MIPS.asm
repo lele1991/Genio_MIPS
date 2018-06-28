@@ -51,8 +51,6 @@ gera:
 	syscall
    	#faz vetor
    	sw $a0, 0($s1)      	#vetor
-   	li $v0,1 
-   	syscall
    	addi $s1, $s1, 4    	#anda pelo vetor
    	addi $t0, $t0, -1    	#qtd -1
  	j random
@@ -71,26 +69,34 @@ sequencia:
 	sw  $ra, 8($sp)
 	
 	move $t0, $a0				#vetor é igual t0
-	li   $t1, 0				#i = 0
+	li   $t1, 0					#i = 0
 	move $t2, $a1				#numero de ativacao recebido pelo usuario
-
-	for_sequencia:
-	bge $t1, $t2, sai_sequencia	#for(i=0; i<n; i++)
-		lw $a0, 0($t0)
-		sw $t0, 12($sp)		#salva  local onde ta o vetor antes para usar depois 
-		sw $t1, 16($sp)		#salva t1 = i
-		sw $t2, 20($sp)		#salva t1 = i
-			
-		jal acende
-		
-		lw $t0, 12($sp)
-		lw $t1, 16($sp)
-		lw $t2, 20($sp)				
-		add $t0, $t0, 4			#anda pelo vetor
-		addi $t1, $t1, 1		#i++
-	j for_sequencia
 	
-	sai_sequencia:
+	for_maxativacao:
+		bgt $t3, $t2, sai_formax	#if j = num de ativacao
+		
+		for_sequencia:
+		li   $t1, 0					#i = 0
+		bge $t1, $t3, sai_sequencia	#for(i=0; i<j; i++)
+			lw $a0, 0($t0)
+			sw $t0, 12($sp)		#salva  local onde ta o vetor antes para usar depois 
+			sw $t1, 16($sp)		#salva t1 = i
+			sw $t2, 20($sp)		#salva t1 = j
+			
+			jal acende
+			
+			lw $t0, 12($sp)
+			lw $t1, 16($sp)
+			lw $t2, 20($sp)				
+			add $t0, $t0, 4			#anda pelo vetor
+			addi $t1, $t1, 1		#i++
+			j for_sequencia
+			
+		sai_sequencia:
+			addi $t3, $t3, 1		#j++
+			j for_maxativacao
+			
+	sai_formax:
 	lw  $ra, 8($sp)
 	lw 	$a1, 4 ($sp)
 	lw 	$a0, 0 ($sp)
