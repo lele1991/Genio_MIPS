@@ -9,16 +9,26 @@ main:
 	#0 - 5n;  1 - 15n;  3 - 45;
 	#pega do teclado 0, 1, 2
 	#move s0
-	la $s1, vetor	#vetor random
+	la $a0, vetor	#vetor random
 	#fazer menu com entrada do usuario para a quantidade de numeros no vetor
-	li $s2,5		#quantidade de numero no vetor (ativacao) -  dado pelo usuario
+	li $a1,5		#quantidade de numero no vetor (ativacao) -  dado pelo usuario
 	
 	
 	jal gera			#gera vetor random
-	move $a0, $s1	#parametro pra sequencia a0 = vetor
-	move $a1, $s2		# '' 	a1 = num ativacao
-	jal sequencia
+	#la $s2, vetor	#parametro pra sequencia a0 = vetor
+	#li $t1,0
+	#imprimir:
+	#	beq $t1,5,sai_print
+	#	lw $a0,0($s2)
+	#	li $v0,1	#imprimir vetor 
+	#	syscall
+	#	addi $s2, $s2, 4
+	#	addi $t1,$t1,1
+	#	j imprimir
 	
+	#move $a1, $s2		# '' 	a1 = num ativacao
+	jal sequencia
+	#sai_print:
 	li $v0, 10
 	syscall
 	#512/16 -  pixel maior - 32 espacos 
@@ -28,8 +38,12 @@ main:
 gera:
 	addi $sp, $sp, -24
 	sw $ra, 0($sp)
-
-	move $t0, $a0
+	sw $a0, 4($sp)		#vetor 
+	sw $a1, 8($sp)		#n de ativacao 
+	
+	move $t0, $a1		#t0 é o n de ativacao 
+	move $s1, $a0		# s1 endereco do vetor 
+	
 	random:
 	beqz $t0, sai_gera		#t0 = 0 qtdd
    	li $a1, 3       	 	#ate 3 pra gerar valor
@@ -37,43 +51,55 @@ gera:
 	syscall
    	#faz vetor
    	sw $a0, 0($s1)      	#vetor
+   	li $v0,1 
+   	syscall
    	addi $s1, $s1, 4    	#anda pelo vetor
    	addi $t0, $t0, -1    	#qtd -1
  	j random
-		move $t0, $a0
 		
 	sai_gera:
 	lw $ra, 0($sp)
+	lw $a0, 4($sp)
+	lw $a1, 8($sp)
 	addi $sp, $sp, 24
 	jr $ra
 ########################################################################	
 sequencia:
 	addi $sp, $sp, -24
-	sw  $s0, 0($sp)				#vetor
-	sw	$a1, 4($sp)				#n de ativacao
+	sw  $a0, 0($sp)				#vetor
+	sw $a1, 4($sp)				#n de ativacao
 	sw  $ra, 8($sp)
-	move $s0, $a0
 	
+	move $t0, $a0				#vetor é igual t0
+	li   $t1, 0				#i = 0
 	move $t2, $a1				#numero de ativacao recebido pelo usuario
-	li 	$t1, 0					#i = 0
+
 	for_sequencia:
 	bge $t1, $t2, sai_sequencia	#for(i=0; i<n; i++)
-		lw $a0, 0($s0)
+		lw $a0, 0($t0)
+		sw $t0, 12($sp)		#salva  local onde ta o vetor antes para usar depois 
+		sw $t1, 16($sp)		#salva t1 = i
+		sw $t2, 20($sp)		#salva t1 = i
+			
 		jal acende
-		add $s0, $s0, 4			#anda pelo vetor
+		
+		lw $t0, 12($sp)
+		lw $t1, 16($sp)
+		lw $t2, 20($sp)				
+		add $t0, $t0, 4			#anda pelo vetor
 		addi $t1, $t1, 1		#i++
 	j for_sequencia
 	
 	sai_sequencia:
 	lw  $ra, 8($sp)
 	lw 	$a1, 4 ($sp)
-	lw 	$s0, 0 ($sp)
+	lw 	$a0, 0 ($sp)
 	addi $sp, $sp, 24
 ########################################################################	
 acende:
 	addi $sp, $sp, -24
 	sw   $ra, 8($sp)
-	sw   $a0, 0($sp)    	#vetor
+	sw   $a0, 0($sp)    	# elemento vetor
 	
 	verde_0:
 		bne $a0, 0, azul_1	#acende verde claro
@@ -99,7 +125,7 @@ acende:
 		li $a3, 0x80730D	#amrelo escuro
 		jal amarelo_claro	
 	vermelho_3:
-		bne $a0, 2, sai_acende	#acende vermelho claro 		
+		bne $a0, 3, sai_acende	#acende vermelho claro 		
 		li $a3, 0xFF4500	#vermelho claro
 		jal vermelho_claro
 		jal sleep
