@@ -5,35 +5,19 @@ vetor: .word 0:1024 #inicializados com zero
 .text
 main:
 	jal desenha_jogo
+	#fazer menu com entrada do usuario para a quantidade de numeros no vetor
+	la $a0, vetor	#vetor random
 	#mostra opcao de ativacao
 	#0 - 5n;  1 - 15n;  3 - 45;
 	#pega do teclado 0, 1, 2
-	#move s0
-	la $a0, vetor	#vetor random
-	#fazer menu com entrada do usuario para a quantidade de numeros no vetor
 	li $a1,5		#quantidade de numero no vetor (ativacao) -  dado pelo usuario
 	
-	
 	jal gera			#gera vetor random
-	#la $s2, vetor	#parametro pra sequencia a0 = vetor
-	#li $t1,0
-	#imprimir:
-	#	beq $t1,5,sai_print
-	#	lw $a0,0($s2)
-	#	li $v0,1	#imprimir vetor 
-	#	syscall
-	#	addi $s2, $s2, 4
-	#	addi $t1,$t1,1
-	#	j imprimir
-	
-	#move $a1, $s2		# '' 	a1 = num ativacao
 	jal sequencia
-	#sai_print:
+	
 	li $v0, 10
 	syscall
 	#512/16 -  pixel maior - 32 espacos 
-	#entrada do teclado
-	#compara entrada - roda o jogo
 ########################################################################
 gera:
 	addi $sp, $sp, -24
@@ -46,9 +30,14 @@ gera:
 	
 	random:
 	beqz $t0, sai_gera		#t0 = 0 qtdd
-   	li $a1, 3       	 	#ate 3 pra gerar valor
+   	li $a1, 4       	 	#ate 3 pra gerar valor
 	li $v0, 42				#random
 	syscall
+	
+	#imprime o numero que gerou APAGAR DEPOIS
+	li $v0, 1
+	syscall
+   	
    	#faz vetor
    	sw $a0, 0($s1)      	#vetor
    	addi $s1, $s1, 4    	#anda pelo vetor
@@ -63,44 +52,78 @@ gera:
 	jr $ra
 ########################################################################	
 sequencia:
-	addi $sp, $sp, -24
+#----------------------
+#sequencia		8(sp) //multiplo de 8
+#----------------------
+#espaco			------
+#---------------------		
+#ra				24(sp)	
+#---------------------
+#t6				 20(sp)
+#t2				 16(sp)
+#t1				 12(sp)
+#t0 			 8(sp)
+#a1				 4(sp)
+#a0				 0(sp)
+#---------------------
+	addi $sp, $sp, -32
 	sw  $a0, 0($sp)				#vetor
-	sw $a1, 4($sp)				#n de ativacao
-	sw  $ra, 8($sp)
+	sw  $a1, 4($sp)				#n de ativacao
+	sw  $ra, 24($sp)			#retorno
 	
 	move $t0, $a0				#vetor é igual t0
 	li   $t1, 0					#i = 0
 	move $t2, $a1				#numero de ativacao recebido pelo usuario
+	li   $t3, 0					#j = 0
 	
 	for_maxativacao:
-		bgt $t3, $t2, sai_formax	#if j = num de ativacao
+		bge $t3, $t2, sai_formax	#if j = num de ativacao
+		la  $t0, vetor 
 		
 		for_sequencia:
-		li   $t1, 0					#i = 0
-		bge $t1, $t3, sai_sequencia	#for(i=0; i<j; i++)
-			lw $a0, 0($t0)
-			sw $t0, 12($sp)		#salva  local onde ta o vetor antes para usar depois 
-			sw $t1, 16($sp)		#salva t1 = i
-			sw $t2, 20($sp)		#salva t1 = j
-			
-			jal acende
-			
-			lw $t0, 12($sp)
-			lw $t1, 16($sp)
-			lw $t2, 20($sp)				
-			add $t0, $t0, 4			#anda pelo vetor
-			addi $t1, $t1, 1		#i++
-			j for_sequencia
-			
+			bgt $t1, $t3, sai_sequencia		#for(i=0; i<=j; i++)  se t1>t3, sai
+				#salva e guarda por causa do ACENDE
+				sw $t0, 8($sp)				#salva  local onde ta o vetor antes para usar depois 
+				sw $t1, 12($sp)				#salva t1 = i 
+				sw $t2, 16($sp)				#salva t2 = num de tivacao
+				sw $t3, 20($sp)				#salva t3 = j 
+				
+				lw $a0, 0($t0)
+				jal acende
+				lw 	 $t0, 8($sp)			#carrego vetor	
+				lw 	 $t1, 12($sp)			#carrego i
+				lw 	 $t2, 16($sp)			#num ativacao
+				lw   $t3, 20($sp)			#carrego j
+				
+				#salva e guarda por causa do COMPARA
+				sw $t0, 8($sp)				#salva  local onde ta o vetor antes para usar depois 
+				sw $t1, 12($sp)				#salva t1 = i 
+				sw $t2, 16($sp)				#salva t2 = num de tivacao
+				sw $t3, 20($sp)				#salva t3 = j 
+				
+				jal compara
+				
+				lw 	 $t0, 8($sp)			#carrego vetor	
+				lw 	 $t1, 12($sp)			#carrego i
+				lw 	 $t2, 16($sp)			#num ativacao
+				lw   $t3, 20($sp)			#carrego j				
+				
+				
+				add  $t0, $t0, 4			#anda pelo vetor
+				addi $t1, $t1, 1			#i++
+				j for_sequencia
+				
 		sai_sequencia:
 			addi $t3, $t3, 1		#j++
-			j for_maxativacao
+			li   $t1, 0				#i = 0
+	j for_maxativacao
 			
 	sai_formax:
-	lw  $ra, 8($sp)
+	lw  $ra, 24($sp)
 	lw 	$a1, 4 ($sp)
 	lw 	$a0, 0 ($sp)
-	addi $sp, $sp, 24
+	addi $sp, $sp, 32
+	jr $ra
 ########################################################################	
 acende:
 	addi $sp, $sp, -24
@@ -144,6 +167,19 @@ acende:
 	addi $sp, $sp, 24
 	jr $ra	
 ########################################################################
+compara:
+addi $sp, $sp, -24
+	sw   $ra, 8($sp)
+	sw   $a0, 0($sp)  #o que é?  	
+
+#codigo a ser feito
+
+
+	lw   $a0, 0($sp)
+	lw   $ra, 8($sp)
+	addi $sp, $sp, 24
+	jr $ra	
+########################################################################	
 desenha_jogo:	
 	addi $sp, $sp, -24
 	sw $ra, 0($sp)			#salva retorno do desenho
