@@ -1,32 +1,64 @@
 .data
+#excecao
+flag: .word 0
+tecla: .word 0
 
-vetor: .word 0:1024 #inicializados com zero
-
+vetor: 			.word 0:1024 	#inicializados com zero 
+menu:			 .asciiz "\n Menu: 1- Iniciar o jogo     2- Encerrar o programa.\n" 
+ERRO: 			.asciiz "\n ERRO: O número digitado não corresponde à nenhuma opção.\n" 
+ativacao: 		.asciiz "\n Digite o número de ativação:  " 
+score: 			.asciiz "\n ACERTOU"
+loser: 			.asciiz "\n ERROU"
+	#512/16 -  pixel maior - 32 espacos 
 .text
 main:
-	jal desenha_jogo
-	#fazer menu com entrada do usuario para a quantidade de numeros no vetor
-	la $a0, vetor	#vetor random
-	#mostra opcao de ativacao
-	#0 - 5n;  1 - 15n;  3 - 45;
-	#pega do teclado 0, 1, 2
-	li $a1,5		#quantidade de numero no vetor (ativacao) -  dado pelo usuario
+	menu_jogo:
+	#imprimir MENU
+		li $v0, 4				#string
+		la $a0, menu			#le mensagem
+		syscall
+	#le entrada - numero
+		li $v0, 5 				#int
+		syscall					#int 
 	
-	jal gera			#gera vetor random
-	jal sequencia
+	bne $v0, 1, sai_encerra
+	#imprime mensagem de ativacao
+		li $v0, 4				#string
+		la $a0, ativacao		#mensagem
+		syscall
+
+		jal desenha_jogo
+		
+		la $a0, vetor			#vetor random
+		#le entrada - numero
+		li $v0, 5 				#int
+		syscall					#int 
+		move  $a1, $v0
+		move  $s1, $v0			#s1 = numero no vetor (ativacao)
+		jal gera				#gera vetor random
+		move $a1, $s1			#a1 = numero no vetor (ativacao)
+		jal sequencia
+		
+		#musica
+		#tempo - duracao q o jogador escolhe
+		#interrupçAo
+		
+		j menu_jogo
+		
+	sai_encerra:
+		bne $v0, 2, erro
+		li $v0, 10
+		syscall
 	
-	li $v0, 10
-	syscall
-	#512/16 -  pixel maior - 32 espacos 
+	erro:
+		li $v0, 4					#string
+		la $a0, ERRO				#mensagem
+		syscall
+		j menu_jogo
 ########################################################################
 gera:
-	addi $sp, $sp, -24
-	sw $ra, 0($sp)
-	sw $a0, 4($sp)		#vetor 
-	sw $a1, 8($sp)		#n de ativacao 
-	
 	move $t0, $a1		#t0 é o n de ativacao 
-	move $s1, $a0		# s1 endereco do vetor 
+	move $t1, $a0		# s1 endereco do vetor 
 	
 	random:
 	beqz $t0, sai_gera		#t0 = 0 qtdd
@@ -39,33 +71,15 @@ gera:
 	syscall
    	
    	#faz vetor
-   	sw $a0, 0($s1)      	#vetor
-   	addi $s1, $s1, 4    	#anda pelo vetor
+   	sw $a0, 0($t1)      	#vetor
+   	addi $t1, $t1, 4    	#anda pelo vetor
    	addi $t0, $t0, -1    	#qtd -1
  	j random
 		
 	sai_gera:
-	lw $ra, 0($sp)
-	lw $a0, 4($sp)
-	lw $a1, 8($sp)
-	addi $sp, $sp, 24
 	jr $ra
 ########################################################################	
 sequencia:
-#----------------------
-#sequencia		8(sp) //multiplo de 8
-#----------------------
-#espaco			------
-#---------------------		
-#ra				24(sp)	
-#---------------------
-#t6				 20(sp)
-#t2				 16(sp)
-#t1				 12(sp)
-#t0 			 8(sp)
-#a1				 4(sp)
-#a0				 0(sp)
-#---------------------
 	addi $sp, $sp, -32
 	sw  $a0, 0($sp)				#vetor
 	sw  $a1, 4($sp)				#n de ativacao
@@ -77,45 +91,52 @@ sequencia:
 	li   $t3, 0					#j = 0
 	
 	for_maxativacao:
-		bge $t3, $t2, sai_formax	#if j = num de ativacao
+	bge $t3, $t2, sai_formax	#if j = num de ativacao
 		la  $t0, vetor 
 		
-		for_sequencia:
+		for_sequencia1:
+		bgt $t1, $t3, inicializa_for2		#for(i=0; i<=j; i++)  se t1>t3, sai
+			#salva e guarda por causa do ACENDE
+			sw $t0, 8($sp)				#salva  local onde ta o vetor antes para usar depois 
+			sw $t1, 12($sp)				#salva t1 = i 
+			sw $t2, 16($sp)				#salva t2 = num de tivacao
+			sw $t3, 20($sp)				#salva t3 = j 
+			lw $a0, 0($t0)
+			#acende a sequencia
+			jal acende
+			lw 	 $t0, 8($sp)			#carrego vetor	
+			lw 	 $t1, 12($sp)			#carrego i
+			lw 	 $t2, 16($sp)			#num ativacao
+			lw   $t3, 20($sp)			#carrego j
+		add  $t0, $t0, 4				#anda pelo vetor
+		addi $t1, $t1, 1				#i++
+		j for_sequencia1
+		
+		inicializa_for2:
+			la  $t0, vetor 
+			li $t1, 0						#i = 0
+			for_sequencia2:					
 			bgt $t1, $t3, sai_sequencia		#for(i=0; i<=j; i++)  se t1>t3, sai
 				#salva e guarda por causa do ACENDE
 				sw $t0, 8($sp)				#salva  local onde ta o vetor antes para usar depois 
 				sw $t1, 12($sp)				#salva t1 = i 
 				sw $t2, 16($sp)				#salva t2 = num de tivacao
 				sw $t3, 20($sp)				#salva t3 = j 
-				
 				lw $a0, 0($t0)
-				jal acende
+			#acende a sequencia
+				jal compara
+				beqz $v0, sai_formax
 				lw 	 $t0, 8($sp)			#carrego vetor	
 				lw 	 $t1, 12($sp)			#carrego i
 				lw 	 $t2, 16($sp)			#num ativacao
 				lw   $t3, 20($sp)			#carrego j
-				
-				#salva e guarda por causa do COMPARA
-				sw $t0, 8($sp)				#salva  local onde ta o vetor antes para usar depois 
-				sw $t1, 12($sp)				#salva t1 = i 
-				sw $t2, 16($sp)				#salva t2 = num de tivacao
-				sw $t3, 20($sp)				#salva t3 = j 
-				
-				jal compara
-				
-				lw 	 $t0, 8($sp)			#carrego vetor	
-				lw 	 $t1, 12($sp)			#carrego i
-				lw 	 $t2, 16($sp)			#num ativacao
-				lw   $t3, 20($sp)			#carrego j				
-				
-				
-				add  $t0, $t0, 4			#anda pelo vetor
-				addi $t1, $t1, 1			#i++
-				j for_sequencia
-				
+			add  $t0, $t0, 4			#anda pelo vetor
+			addi $t1, $t1, 1			#i++
+			j for_sequencia2
+		
 		sai_sequencia:
-			addi $t3, $t3, 1		#j++
-			li   $t1, 0				#i = 0
+		addi $t3, $t3, 1		#j++
+		li   $t1, 0				#i = 0
 	j for_maxativacao
 			
 	sai_formax:
@@ -124,11 +145,106 @@ sequencia:
 	lw 	$a0, 0 ($sp)
 	addi $sp, $sp, 32
 	jr $ra
-########################################################################	
+########################################################################
+compara:
+addi $sp, $sp, -24
+sw  $a0, 0($sp)			#vetor
+sw  $ra, 4($sp)			#retorno
+	
+	move $t3, $a0
+	
+	lui	 $a0, 0xFFFF			#carrega endereço
+	get_char:
+	lw	 $t0, 0($a0)			#controle
+	andi $t0, $t0, 0x00000001	#esperar
+	beq  $t0, $zero, get_char	#enquanto nao houver comunicacao 
+	lw   $v0, 4($a0)			#salva os dados
+	
+	lw $t1, 0($sp)
+	if_0:
+	bne $t1, 0, if_1
+		bne $v0, 'w', else_0
+			li $a0, 0
+			jal acende
+			#imprimir score
+			li $v0, 4				#string
+			la $a0, score			#le mensagem
+			syscall
+			li $t2, 1				#flag
+			j sai_compara			
+		else_0:
+			#imprimir ERROU
+			li $v0, 4				#string
+			la $a0, loser			#le mensagem
+			syscall
+			li $t2, 0				#flag
+			j sai_compara
+	if_1:
+	bne $t1, 1, if_2
+		bne $v0, 's', else_1
+			li $a0, 1
+			jal acende
+			#imprimir score
+			li $v0, 4				#string
+			la $a0, score			#le mensagem
+			syscall
+			li $t2, 1				#flag
+			j sai_compara
+		else_1:
+			#imprimir ERROU
+			li $v0, 4				#string
+			la $a0, loser			#le mensagem
+			syscall
+			li $t2, 0				#flag
+			j sai_compara
+	if_2:
+	bne $t1, 2, if_3
+		bne $v0, 'a', else_2
+			li $a0, 2
+			jal acende
+			#imprimir score
+			li $v0, 4				#string
+			la $a0, score			#le mensagem
+			syscall
+			li $t2, 1				#flag
+			j sai_compara
+		else_2:
+			#imprimir ERROU
+			li $v0, 4				#string
+			la $a0, loser			#le mensagem
+			syscall
+			li $t2, 0				#flag
+			j sai_compara
+	if_3:
+	bne $t1, 3, sai_compara
+		bne $v0, 'd', else_3
+			li $a0, 3
+			jal acende
+			#imprimir score
+			li $v0, 4				#string
+			la $a0, score			#le mensagem
+			syscall
+			li $t2, 1				#flag
+			j sai_compara
+		else_3:
+			#imprimir ERROU
+			li $v0, 4				#string
+			la $a0, loser			#le mensagem
+			syscall
+			li $t2, 0				#flag
+			j sai_compara
+	
+	sai_compara:
+	lw  $ra, 4($sp)
+	lw 	$a0, 0 ($sp)
+	addi $sp, $sp, 24
+	move $v0, $t2
+	jr $ra
+########################################################################
 acende:
 	addi $sp, $sp, -24
 	sw   $ra, 8($sp)
-	sw   $a0, 0($sp)    	# elemento vetor
+	sw   $a0, 0($sp)    	#elemento vetor
 	
 	verde_0:
 		bne $a0, 0, azul_1	#acende verde claro
@@ -137,54 +253,52 @@ acende:
 		jal sleep
 		li $a3, 0x135C0A	#verde escuro
 		jal verde_claro				
-			
+		jal sleep
+				
 	azul_1:
+		lw $a0, 0($sp)
 		bne $a0, 1, amarelo_2	#acende azul claro 
 		li $a3, 0x00BFFF	#azul claro
 		jal azul_claro
 		jal sleep
 		li $a3, 0x0C0273	#azul escuro
 		jal azul_claro	
+		jal sleep
 						
 	amarelo_2:
+		lw $a0,  0($sp)
 		bne $a0, 2, vermelho_3	#acende amarelo claro 
 		li $a3, 0xFFFF00	#amarelo claro
 		jal amarelo_claro
 		jal sleep
 		li $a3, 0x80730D	#amrelo escuro
 		jal amarelo_claro	
+		jal sleep
+		
 	vermelho_3:
+		lw $a0,  0($sp)
 		bne $a0, 3, sai_acende	#acende vermelho claro 		
 		li $a3, 0xFF4500	#vermelho claro
 		jal vermelho_claro
 		jal sleep
 		li $a3, 0x800303	#vermelho escuro
 		jal vermelho_claro
+		jal sleep
 		
 	sai_acende:
 	lw   $a0, 0($sp)
 	lw   $ra, 8($sp)
 	addi $sp, $sp, 24
 	jr $ra	
-########################################################################
-compara:
-addi $sp, $sp, -24
-	sw   $ra, 8($sp)
-	sw   $a0, 0($sp)  #o que é?  	
-
-#codigo a ser feito
 
 
-	lw   $a0, 0($sp)
-	lw   $ra, 8($sp)
-	addi $sp, $sp, 24
-	jr $ra	
 ########################################################################	
+#PINTA ESCURO
 desenha_jogo:	
 	addi $sp, $sp, -24
 	sw $ra, 0($sp)			#salva retorno do desenho
 	#QUADRADO VERDE - CIMA
-	li $a3, 0x135C0A			#verde escuro
+	li $a3, 0x135C0A		#verde escuro
 	li $a2, 32				#tamanho da linha/coluna
 	li $a0, 0				#anda na vertical
 	li $a1, 10				#anda na horizontal
@@ -323,11 +437,12 @@ vermelho_claro:
 sleep:	
 	#sleep:
 	li $v0, 32 			#sleep
-	li $a0, 1000 		#1000ms
+	li $a0, 500 		#1000ms
 	syscall
 	jr $ra 
 			
 #########################################################################desenha
+#ESCREVE
 linha:  
 	li   $t0, 0x10010000	#t3 = endereco base
 	sll  $t1, $a0, 5		#y = y * 512/16  -  vertical -2^5=16 -> 16+16 -> 16x16 bloco de 32
