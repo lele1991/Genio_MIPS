@@ -73,8 +73,8 @@ gera:
 	syscall
 	
 	#imprime o numero que gerou APAGAR DEPOIS
-#	li $v0, 1
-#	syscall
+	li $v0, 1
+	syscall
    	
    	#faz vetor
    	sw $a0, 0($t1)      	#vetor
@@ -332,11 +332,10 @@ acende:
 	verde_0:
 		lw $a0, 0($sp)
 		bne $a0, 0, azul_1	#acende verde claro
-		
 		#TOCANDO MUSICA
 		li $v0, 31
 		li $a0, 61		#tom
-		move $a1, $s7	#velocidade
+		move $a1, $s7		#velocidade
 		li $a2, 24		#instrumento
 		li $a3, 50		#volume
 		syscall
@@ -353,7 +352,6 @@ acende:
 		
 		lw $a0, 0($sp)
 		bne $a0, 1, amarelo_2	#acende azul claro 
-		
 		#TOCANDO MUSICA
 		li $v0, 31
 		li $a0, 62
@@ -375,7 +373,6 @@ acende:
 		
 		lw $a0,  0($sp)
 		bne $a0, 2, vermelho_3	#acende amarelo claro
-		
 		#TOCANDO MUSICA
 		li $v0, 31
 		li $a0, 63
