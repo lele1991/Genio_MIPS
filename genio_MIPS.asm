@@ -103,6 +103,8 @@ sequencia:
 			sw $t3, 20($sp)				#salva t3 = j 
 			lw $a0, 0($t0)
 			#acende a sequencia
+			
+			
 			jal acende
 			lw 	 $t0, 8($sp)			#carrego vetor	
 			lw 	 $t1, 12($sp)			#carrego i
