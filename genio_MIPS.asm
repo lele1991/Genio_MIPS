@@ -20,37 +20,50 @@ main:
 	menu_jogo:
 	#imprimir MENU
 		li $v0, 4			#string
-		la $a0, menu			#le mensagem
+		la $a0, menu		#le mensagem
 		syscall
 	#le entrada - numero
 		li $v0, 5 			#int
 		syscall				#int 
 	
 	bne $v0, 1, sai_encerra
+<<<<<<< HEAD
+=======
+		jal desenha_jogo
+		
+>>>>>>> c4d3d27d28ac4b4d55e193a5196c7ad2bf6cc971
 		#imprime mensagem de ativacao
-		li $v0, 4			#string
+		li $v0, 4				#string
 		la $a0, ativacao		#mensagem
 		syscall
 		#512/16 -  pixel maior - 32 espacos 
+<<<<<<< HEAD
 		
 		jal desenha_jogo
 		la $a0, vetor				#vetor random
+=======
+
+>>>>>>> c4d3d27d28ac4b4d55e193a5196c7ad2bf6cc971
 		#le entrada - numero
 		li $v0, 5 				#int
 		syscall					#int 
 		
-		move  $a1, $v0
-		move  $s1, $v0				#s1 = numero no vetor (ativacao)
+		move $a1, $v0			#numero de ativacao
+		move $s1, $a1			#s1 = numero no vetor (ativacao) pra usar na sequencia
+		la 	 $a0, vetor			#vetor random
 		jal gera				#gera vetor random
+		
 		#imprimir VELOCIDADE
 		li $v0, 4				#string
-		la $a0, velocidade			#le mensagem
+		la $a0, velocidade		#le mensagem
 		syscall
+		
 		#le entrada - numero
 		li $v0, 5 				#int
 		syscall					#int 
-		move $s7, $v0				#velocidade
-		move $a1, $s1				#a1 = numero no vetor (ativacao)
+		
+		move $s7, $v0			#velocidade
+		move $a1, $s1			#a1 = numero no vetor (ativacao)
 		jal sequencia
 				
 		j menu_jogo
@@ -68,7 +81,7 @@ main:
 ########################################################################
 gera:
 	move $t0, $a1		#t0 é o n de ativacao 
-	move $t1, $a0		# s1 endereco do vetor 
+	move $t1, $a0		#t1 endereco do vetor 
 	
 	random:
 	beqz $t0, sai_gera		#t0 = 0 qtdd
@@ -77,8 +90,8 @@ gera:
 	syscall
 	
 	#imprime o numero que gerou APAGAR DEPOIS
-	li $v0, 1
-	syscall
+#	li $v0, 1
+#	syscall
    	
    	#faz vetor
    	sw $a0, 0($t1)      	#vetor
@@ -157,37 +170,42 @@ sequencia:
 	bne $v0, 1, sai_formax
 		#venceu
 		li $v0, 31
-		li $a0, 64
+		li $a0, 54
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
 		syscall
+		jal sleep_espera
 		li $v0, 31
-		li $a0, 62
+		li $a0, 52
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
 		syscall
+		jal sleep_espera
 		li $v0, 31
-		li $a0, 69
+		li $a0, 59
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
 		syscall
+		jal sleep_espera
 		li $v0, 31
-		li $a0, 64
+		li $a0, 54
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
 		syscall
+		jal sleep_espera
 		li $v0, 31
-		li $a0, 62
+		li $a0, 52
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
 		syscall
+		jal sleep_espera
 		li $v0, 31
-		li $a0, 69
+		li $a0, 59
 		li $a1, 500
 		li $a2, 24
 		li $a3, 100
@@ -293,33 +311,34 @@ sw  $ra, 4($sp)			#retorno
 	
 	sai_compara:
 	bne $t2, 0, continua
+		#perdeu
 		li $v0, 31
 		li $a0, 67
-		li $a1, 700
+		li $a1, 1000
 		li $a2, 96
 		li $a3, 100
 		syscall
 		li $v0, 31
 		li $a0, 66
-		li $a1, 700
+		li $a1, 1000
 		li $a2, 96
 		li $a3, 100
 		syscall
 		li $v0, 31
 		li $a0, 65
-		li $a1, 700
+		li $a1, 1000
 		li $a2, 96
 		li $a3, 100
 		syscall
 		li $v0, 31
 		li $a0, 64
-		li $a1, 700
+		li $a1, 1000
 		li $a2, 96
 		li $a3, 100
 		syscall
 		li $v0, 31
 		li $a0, 63
-		li $a1, 700
+		li $a1, 1000
 		li $a2, 96
 		li $a3, 100
 		syscall
@@ -339,12 +358,13 @@ acende:
 	verde_0:
 		lw $a0, 0($sp)
 		bne $a0, 0, azul_1	#acende verde claro
+		
 		#TOCANDO MUSICA
-		li $v0, 31
-		li $a0, 61		#tom
+		li $a0, 61			#tom
 		move $a1, $s7		#velocidade
-		li $a2, 24		#instrumento
-		li $a3, 50		#volume
+		li $a2, 24			#instrumento
+		li $a3, 50			#volume
+		li $v0, 31
 		syscall
 		
 		lw $a0, 0($sp)
@@ -359,12 +379,14 @@ acende:
 		
 		lw $a0, 0($sp)
 		bne $a0, 1, amarelo_2	#acende azul claro 
+		
 		#TOCANDO MUSICA
-		li $v0, 31
+		
 		li $a0, 62
 		move $a1, $s7		#velocidade
 		li $a2, 24
 		li $a3, 50
+		li $v0, 31
 		syscall
 		
 		lw $a0, 0($sp)
@@ -380,12 +402,14 @@ acende:
 		
 		lw $a0,  0($sp)
 		bne $a0, 2, vermelho_3	#acende amarelo claro
+		
 		#TOCANDO MUSICA
-		li $v0, 31
+		
 		li $a0, 63
 		move $a1, $s7		#velocidade
 		li $a2, 24
 		li $a3, 50
+		li $v0, 31
 		syscall
 		
 		lw $a0, 0($sp)		 
@@ -396,17 +420,17 @@ acende:
 		jal amarelo_claro	
 		jal sleep
 	
-
 	vermelho_3:
 		
 		lw $a0,  0($sp)
 		bne $a0, 3, sai_acende	#acende vermelho claro 
 		#TOCANDO MUSICA
-		li $v0, 31
+		
 		li $a0, 64
 		move $a1, $s7		#velocidade
 		li $a2, 24
 		li $a3, 50
+		li $v0, 31
 		syscall
 		
 		lw $a0, 0($sp)		
@@ -570,13 +594,13 @@ vermelho_claro:
 ########################################################################
 sleep:	#sleep:
 	li $v0, 32 			#sleep
-	move $a0, $s7	 		#velocidade
+	move $a0, $s7	 	#velocidade
 	syscall
 	jr $ra 
 #########################################################################
 sleep_espera:	
 	li $v0, 32 			#sleep
-	li $a0, 700	 		#velocidade
+	li $a0, 500	 		#velocidade
 	syscall
 	jr $ra 
 #ESCREVE##################################################################
