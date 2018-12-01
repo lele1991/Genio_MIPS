@@ -231,7 +231,7 @@ sw  $ra, 4($sp)					#retorno
 		la $a0, ringbuffer
 		jal rbuf_empty
 		bnez $v0, empty_ring_loop
-			sw $zero, 0xffff0000
+			#sw $zero, 0xffff0000
 			jal read
 	
 	lw $t1, 0($sp)
