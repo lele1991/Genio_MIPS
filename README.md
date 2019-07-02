@@ -1,3 +1,2 @@
-# genio
-Jogo genio, MIPS(assembly)
-"# trab_final_sensores" 
+# Genio
+Projeto final para a unidade curricular de Microprocessadores, MIPS(assembly)
